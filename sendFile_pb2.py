@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'\n\007ex.grpc\242\002\003HSW',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0esendFile.proto\x12\nuploadFile\"}\n\x04Task\x12\x10\n\x08taskName\x18\x01 \x01(\t\x12\x0e\n\x06nodeId\x18\x02 \x01(\t\x12&\n\x0c\x66\x65\x61ture_pair\x18\x03 \x01(\x0b\x32\x10.uploadFile.Pair\x12\x10\n\x08\x66ilename\x18\x04 \x01(\t\x12\x19\n\x11\x63ompute_filenames\x18\x05 \x03(\t\"$\n\x04Pair\x12\r\n\x05pair1\x18\x01 \x01(\t\x12\r\n\x05pair2\x18\x02 \x01(\t\"0\n\x0cTaskResponse\x12\x10\n\x08taskName\x18\x01 \x01(\t\x12\x0e\n\x06nodeId\x18\x02 \x01(\t\"-\n\x08NewChunk\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x02 \x01(\x0c\"\x18\n\x05\x43hunk\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\x0c\"K\n\x0cUploadStatus\x12\x0f\n\x07message\x18\x01 \x01(\t\x12*\n\x04\x63ode\x18\x02 \x01(\x0e\x32\x1c.uploadFile.UploadStatusCode*3\n\x10UploadStatusCode\x12\x0b\n\x07Unknown\x10\x00\x12\x06\n\x02Ok\x10\x01\x12\n\n\x06\x46\x61iled\x10\x02\x32\xbc\x01\n\x0b\x46ileService\x12\x39\n\x06upload\x12\x11.uploadFile.Chunk\x1a\x18.uploadFile.UploadStatus\"\x00(\x01\x12\x36\n\x08sendTask\x12\x10.uploadFile.Task\x1a\x14.uploadFile.NewChunk\"\x00\x30\x01\x12:\n\tbidupload\x12\x11.uploadFile.Chunk\x1a\x14.uploadFile.NewChunk\"\x00(\x01\x30\x01\x42\x0f\n\x07\x65x.grpc\xa2\x02\x03HSWb\x06proto3'
+  serialized_pb=b'\n\x0esendFile.proto\x12\nuploadFile\"}\n\x04Task\x12\x10\n\x08taskName\x18\x01 \x01(\t\x12\x0e\n\x06nodeId\x18\x02 \x01(\t\x12&\n\x0c\x66\x65\x61ture_pair\x18\x03 \x03(\x0b\x32\x10.uploadFile.Pair\x12\x10\n\x08\x66ilename\x18\x04 \x01(\t\x12\x19\n\x11\x63ompute_filenames\x18\x05 \x03(\t\"$\n\x04Pair\x12\r\n\x05pair1\x18\x01 \x01(\t\x12\r\n\x05pair2\x18\x02 \x01(\t\"0\n\x0cTaskResponse\x12\x10\n\x08taskName\x18\x01 \x01(\t\x12\x0e\n\x06nodeId\x18\x02 \x01(\t\"-\n\x08NewChunk\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x02 \x01(\x0c\"\x18\n\x05\x43hunk\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\x0c\"K\n\x0cUploadStatus\x12\x0f\n\x07message\x18\x01 \x01(\t\x12*\n\x04\x63ode\x18\x02 \x01(\x0e\x32\x1c.uploadFile.UploadStatusCode*3\n\x10UploadStatusCode\x12\x0b\n\x07Unknown\x10\x00\x12\x06\n\x02Ok\x10\x01\x12\n\n\x06\x46\x61iled\x10\x02\x32\xbc\x01\n\x0b\x46ileService\x12\x39\n\x06upload\x12\x11.uploadFile.Chunk\x1a\x18.uploadFile.UploadStatus\"\x00(\x01\x12\x36\n\x08sendTask\x12\x10.uploadFile.Task\x1a\x14.uploadFile.NewChunk\"\x00\x30\x01\x12:\n\tbidupload\x12\x11.uploadFile.Chunk\x1a\x14.uploadFile.NewChunk\"\x00(\x01\x30\x01\x42\x0f\n\x07\x65x.grpc\xa2\x02\x03HSWb\x06proto3'
 )
 
 _UPLOADSTATUSCODE = _descriptor.EnumDescriptor(
@@ -84,8 +84,8 @@ _TASK = _descriptor.Descriptor(
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
       name='feature_pair', full_name='uploadFile.Task.feature_pair', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      number=3, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),

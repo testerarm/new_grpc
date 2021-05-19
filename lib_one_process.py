@@ -19,6 +19,12 @@ import traceback
 
 import json
 
+from opendm import photo
+from opendm import types
+from opendm import log
+
+
+
 def write_json(data, filename):
     with open(filename, 'w') as f:
         json.dump(data, f, indent=4)
@@ -41,7 +47,32 @@ def write_json_append(data, filename):
 
         write_json(data, filename)  
 
-       
+def save_images_database(photos, database_file):
+    with open(database_file, 'w') as f:
+        f.write(json.dumps(map(lambda p: p.__dict__, photos)))
+    
+    log.ODM_INFO("Wrote images database: %s" % database_file)
+
+def load_images_database(database_file):
+    # Empty is used to create types.ODM_Photo class
+    # instances without calling __init__
+    class Empty:
+        pass
+
+    result = []
+
+    log.ODM_INFO("Loading images database: %s" % database_file)
+
+    with open(database_file, 'r') as f:
+        photos_json = json.load(f)
+        for photo_json in photos_json:
+            p = Empty()
+            for k in photo_json:
+                setattr(p, k, photo_json[k])
+            p.__class__ = types.ODM_Photo
+            result.append(p)
+
+    return result   
 
 if __name__ == '__main__':
     
@@ -75,7 +106,7 @@ if __name__ == '__main__':
         images_filepath = '/home/vm1/Desktop/ODM/grpc_stages/node1'  #file path of current node images
         file_path = images_filepath + '/'
         opensfm_config = opensfm_interface.setup_opensfm_config(file_path)
-        active_number_of_nodes = 2
+        active_number_of_nodes = 1
         photos_name = collections.defaultdict(lambda : "None")
         photo_list =  os.listdir(os.path.join(images_filepath, 'images'))
         print(photo_list)
@@ -116,6 +147,7 @@ if __name__ == '__main__':
         start = timer()
 
         #exif extraction
+	
         response = lib.sfm_extract_metadata_list_of_images(image_path, opensfm_config, current_path, photo_list)
 
 
@@ -178,10 +210,16 @@ if __name__ == '__main__':
 
         start = timer()
 
-        lib.sfm_compute_depthmaps(current_path, opensfm_config)
+
+	#export ply
+	
+
+        #lib.sfm_compute_depthmaps(current_path, opensfm_config)
+
+	lib.export_ply_function(images_filepath, opensfm_config)
 
         end = timer()
-        sfm_compute_depthmaps_time = end - start
+        sfm_export_ply_time = end - start
 
 
 
@@ -234,8 +272,40 @@ if __name__ == '__main__':
         
         start = timer()
 
+	from opendm import io
+	images_database_file = io.join_paths(current_path, 'images.json')
+	
+        if not io.file_exists(images_database_file):
+            files = photo_list
+	    images_dir = io.join_paths(file_path,'images')
+            if files:
+                # create ODMPhoto list
+                path_files = [io.join_paths(images_dir, f) for f in files]
 
-        lib.odm_mesh_function(current_path, max_concurrency)
+                photos = []
+		dataset_list = io.join_paths(file_path,'img_list')
+                with open(dataset_list, 'w') as dataset_list:
+                    log.ODM_INFO("Loading %s images" % len(path_files))
+                    for f in path_files:
+                        photos += [types.ODM_Photo(f)]
+                        dataset_list.write(photos[-1].filename + '\n')
+
+                # Save image database for faster restart
+                save_images_database(photos, images_database_file)
+            else:
+                log.ODM_ERROR('Not enough supported images in %s' % images_dir)
+                exit(1)
+        else:
+            # We have an images database, just load it
+            photos = load_images_database(images_database_file)
+
+        log.ODM_INFO('Found %s usable images' % len(photos))
+
+        # Create reconstruction object
+        reconstruction = types.ODM_Reconstruction(photos) 
+
+
+        lib.odm_mesh_function(opensfm_config,current_path, max_concurrency, reconstruction)
 
         end = timer()
         odm_mesh_time = end - start
@@ -248,7 +318,70 @@ if __name__ == '__main__':
 
         end = timer()
         odm_texturing_time = end - start
+
+	
+	import orthophoto
+	start = timer()
+
+	
+	from opendm import system 
+	system.mkdir_p(os.path.join(current_path,'opensfm'))
+	opensfm_interface.invent_reference_lla(images_filepath,  photo_list,os.path.join(current_path, 'opensfm'))
+	system.mkdir_p(os.path.join(current_path,'odm_georeferencing'))
+	odm_georeferencing = io.join_paths(current_path, 'odm_georeferencing')
+	odm_georeferencing_coords = io.join_paths(odm_georeferencing, 'coords.txt')
+
+	reconstruction.georeference_with_gps(photos, odm_georeferencing_coords, True)
+	odm_geo_proj = io.join_paths(odm_georeferencing, 'proj.txt')
+	reconstruction.save_proj_srs(odm_geo_proj) 
+	from opendm.osfm import OSFMContext 
+	octx = OSFMContext(os.path.join(current_path, 'opensfm'))
+	print('----------Export geocroods--------')
+	octx.run('export_geocoords --transformation --proj \'%s\'' % reconstruction.georef.proj4())
+	print('----------Export Geocoords Ppppp--------')
+	
+	
+	import config
+	opendm_config = config.config()
+	tree = {}
+	import odm_georeferencing
+	odm_georeferencing.process(opendm_config, tree, reconstruction, current_path)
+
+	orthophoto.process(opendm_config, current_path, 4, reconstruction)
  
+	
+        
+
+	orthophoto_path = '/home/vm1/Desktop/ODM/grpc_stages/node1/orthophoto/odm_orthophoto.original.tif'
+	from opendm import orthophoto
+	orthophoto.generate_png(orthophoto_path)
+
+
+	from PIL import Image 
+
+	o_image = '/home/vm1/Desktop/ODM/grpc_stages/node1/orthophoto/odm_orthophoto.original.png'
+	r_image = '/home/vm1/Desktop/ODM/grpc_stages/node1/orthophoto/odm_orthophoto_resize.png'
+	
+	img = Image.open(o_image)
+
+	new_img = img.resize((1200,1200),Image.ANTIALIAS)
+	new_img.save(r_image)
+		
+	end = timer()
+	odm_orthophoto_time = end - start
+
+	
+	start_yolo = timer()
+	import subprocess
+	process = subprocess.Popen(['./darknet/darknet', 'detector', 'test', './darknet/obj.data','./darknet/yolov4-newcustom.cfg','./darknet/yolov4-newcustom1_last.weights', r_image, '-thresh', '0.5'], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	stdout, stderr = process.communicate()
+	print(stderr)
+	print(stdout)
+	process.wait()
+
+	yolo_time = timer()-start_yolo
+	
+
 
         # for each in ref_image:
         #     opensfm_interface.detect(current_path+'features', current_path+each,each ,opensfm_config)
@@ -383,7 +516,7 @@ if __name__ == '__main__':
         print('OpenSfm Reconstruction Total Time: ' + str(sfm_opensfm_reconstruction_time))
         print('OpenSfm Undistort Image Total Time: ' + str(sfm_undistort_image_time))
         print('OpenSfm Export Visual Sfm Total Time: ' + str(sfm_export_visualsfm_time))
-        print('OpenSfm Compute DepthMaps Sfm Total Time: ' + str(sfm_compute_depthmaps_time))
+        print('OpenSfm Export Ply Sfm Total Time: ' + str(sfm_export_ply_time))
         print('Mve Makescene Sfm Total Time: ' + str(mve_makescene_function_time))
         print('Mve Dense Reconstruction Sfm Total Time: ' + str(mve_dense_reconstruction_time))
         print('Mve Scene 2 Pset Sfm Total Time: ' + str(mve_mve_scene2pset_time))
@@ -391,7 +524,8 @@ if __name__ == '__main__':
         print('ODM Filterpoints Total Time: ' + str(odm_filterpoint_time))
         print('ODM Mesh Total Time: ' + str(odm_mesh_time))
         print('ODM Texturing Total Time: ' + str(odm_texturing_time))
-        
+        print('odm_orthophoto:' + ' ' + str(odm_orthophoto_time))
+	print('yolo time: ' + str(yolo_time))
         
         print('Total Time: ' + str(total_time))
 
@@ -408,7 +542,7 @@ if __name__ == '__main__':
         timer_map['sfm_open_reconstruction-'+nodeids] = sfm_opensfm_reconstruction_time
         timer_map['sfm_undistort-'+nodeids] = sfm_undistort_image_time
         timer_map['sfm_export_visualsfm-'+nodeids] = sfm_export_visualsfm_time
-        timer_map['sfm_compute_depthmap-'+nodeids] = sfm_compute_depthmaps_time
+        timer_map['sfm_compute_depthmap-'+nodeids] = sfm_export_ply_time
         timer_map['mve_makescence_time-'+nodeids] = mve_makescene_function_time
         timer_map['mve_dense_recon_time-'+nodeids] = mve_dense_reconstruction_time
         timer_map['mve_scence2pset_time-'+nodeids] = mve_mve_scene2pset_time
@@ -422,7 +556,7 @@ if __name__ == '__main__':
 
 
         #write time into json file timer
-        write_json_append(timer_map, os.path.join(file_path,str(nodeid)+'-compute_times.json'))
+        write_json(timer_map, os.path.join(file_path,str(nodeid)+'-compute_times.json'))
 
         print('#######################')
         

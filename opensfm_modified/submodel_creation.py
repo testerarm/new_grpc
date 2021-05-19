@@ -31,7 +31,7 @@ def save_clusters_with_neighbors(file_path, clusters):
             clusters=clusters)
 
 def load_clusters(file_path):
-        c = np.load(_clusters_path(file_path))
+        c = np.load(_clusters_path(file_path), allow_pickle=True)
         images = c['images'].ravel()
         labels = c['labels'].ravel()
         return images, c['positions'], labels, c['centers']
@@ -55,7 +55,7 @@ def images_with_gps(file_path):
 
 
 def load_clusters(file_path):
-    c = np.load(_clusters_path(file_path))
+    c = np.load(_clusters_path(file_path), allow_pickle=True)
     images = c['images'].ravel()
     labels = c['labels'].ravel()
     return images, c['positions'], labels, c['centers']
@@ -67,7 +67,7 @@ def save_clusters_with_neighbors(file_path, clusters):
         clusters=clusters)
 
 def load_clusters_with_neighbors(file_path):
-    c = np.load(_clusters_with_neighbors_path(file_path))
+    c = np.load(_clusters_with_neighbors_path(file_path), allow_pickle=True)
     #print(c)
     return c['clusters']
 

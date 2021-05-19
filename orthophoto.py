@@ -14,7 +14,7 @@ from opendm import pseudogeo
 
 def process(args, current_path,  max_concurrency, reconstruction):
         #args = vars(args)
-	orthophoto_cutline = False
+	orthophoto_cutline = True
 	odm_orthophoto = io.join_paths(current_path, 'orthophoto')
 	odm_orthophoto_path = odm_orthophoto
 	odm_orthophoto_render = io.join_paths(odm_orthophoto_path, 'odm_orthophoto_render.tif')
@@ -22,8 +22,8 @@ def process(args, current_path,  max_concurrency, reconstruction):
 	odm_orthophoto_corners = io.join_paths(odm_orthophoto_path, 'odm_orthophoto_corners.tif')
 	odm_orthophoto_log = io.join_paths(odm_orthophoto_path, 'odm_orthophoto_log.tif')		
         odm_orthophoto_tif_log = io.join_paths(odm_orthophoto_path, 'gdal_translate_log.txt')
-	odm_25dgeoreferencing = io.join_paths(current_path, 'georeferencing')
-	odm_georeferencing = io.join_paths(current_path, 'georeferencing')
+	odm_25dgeoreferencing = io.join_paths(current_path, 'odm_georeferencing')
+	odm_georeferencing = io.join_paths(current_path, 'odm_georeferencing')
 
 	odm_georeferencing_coords = io.join_paths(
             odm_georeferencing, 'coords.txt')
@@ -177,7 +177,8 @@ def process(args, current_path,  max_concurrency, reconstruction):
                     
                 # Cutline computation, before cropping
                 # We want to use the full orthophoto, not the cropped one.
-                if orthophoto_cutline:
+		pio = True
+                if pio:
                     cutline_file = os.path.join(odm_orthophoto, "cutline.gpkg")
 
                     compute_cutline(odm_orthophoto_tif, 
@@ -194,13 +195,13 @@ def process(args, current_path,  max_concurrency, reconstruction):
                 orthophoto.post_orthophoto_steps(args, bounds_file_path, odm_orthophoto_tif)
 
                 # Generate feathered orthophoto also
-                if orthophoto_cutline:
+                if pio:
                     orthophoto.feather_raster(odm_orthophoto_tif, 
                             os.path.join(odm_orthophoto, "odm_orthophoto_feathered.tif"),
                             blend_distance=20
                         )
 
-                geotiffcreated = True
+            geotiffcreated = True
             if not geotiffcreated:
                 if io.file_exists(odm_orthophoto_render):
                     pseudogeo.add_pseudo_georeferencing(odm_orthophoto_render)
@@ -213,7 +214,7 @@ def process(args, current_path,  max_concurrency, reconstruction):
 
 	#generate png
 
-	orthophoto.generate_png(odm_orthophoto_tif)
+	#orthophoto.generate_png(odm_orthophoto_tif)
 
         #if args.optimize_disk_space and io.file_exists(tree.odm_orthophoto_render):
         #    os.remove(odm_orthophoto_render)

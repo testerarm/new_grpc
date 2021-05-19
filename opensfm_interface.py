@@ -37,24 +37,6 @@ import gzip
 from collections import defaultdict
 
 #from opensfm_modified import undistort
-from opensfm_modified import export_visualsfm
-from opensfm_modified import compute_depthmaps
-
-
-
-
-
-
-
-#### export visualsfm
-
-def open_compute_depthmaps(file_path, opensfm_config, self_compute=False, self_path=''):
-    cd = compute_depthmaps.ComputeDepthMapsCommand()
-    cd.run(file_path, opensfm_config, self_compute, self_path)
-
-def open_export_visualsfm(file_path, opensfm_config):
-    ev = export_visualsfm.VisualSFMCommand()
-    ev.run(file_path, opensfm_config)
 
 
 #### undistort
@@ -513,9 +495,12 @@ def _reference_lla_path(file_path):
         return os.path.join(file_path, 'reference_lla.json')
 
 
-def invent_reference_lla(file_path, images=None):
+def invent_reference_lla(file_path,images=None,submodel_path=''):
         lat, lon, alt = 0.0, 0.0, 0.0
         wlat, wlon, walt = 0.0, 0.0, 0.0
+	save_path = file_path
+	if submodel_path != '':
+		save_path = submodel_path
         if images is None: 
             print('Noimages in invent reference lla')
         for image in images:
@@ -543,7 +528,7 @@ def invent_reference_lla(file_path, images=None):
         if wlon: lon /= wlon
         if walt: alt /= walt
         reference = {'latitude': lat, 'longitude': lon, 'altitude': 0}  # Set altitude manually.
-        save_reference_lla(file_path, reference)
+        save_reference_lla(save_path, reference)
         return reference
 
 def save_reference_lla(file_path, reference):

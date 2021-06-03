@@ -145,10 +145,17 @@ class FileClient:
            
 		
             task = sendFile_pb2.Task(taskName = taskName, nodeId='node'+str(this_nodeid))
-            if (taskName == 'feature_match_pairs'):
-		print(pairs)
+            if (taskName == 'feature_matching_pairs'):
+		#print(pairs)
 		#task.compute_filenames.extend(pairs)
-		sys.exit(1)
+		for each_pair in pairs:
+			n1 = task.feature_pair.add()
+			n1.pair1 = each_pair[0]
+			n1.pair2 = each_pair[1]
+			
+			
+
+
 		
 		
                 
@@ -162,8 +169,7 @@ class FileClient:
 
             response = self.stub.sendTask(task)
 
-	    if (taskName == 'feature_match_pairs'):
-		sys.exit(1)
+	  
 	   
             response_dir = dir_path + '/node' + str(this_nodeid) + taskDir + submodel_path
             print(' response dir ' + str(response_dir))

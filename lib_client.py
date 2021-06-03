@@ -645,10 +645,10 @@ if __name__ == '__main__':
 
 
         nodeid = 1
-	#nodeid_list = [1,2,3,4]
-        #nodeid_map = {2: '5001', 1: 'self', 3: '50052', 4: '50051'}
-	nodeid_list = [1,2]
-        nodeid_map = {2: '5001', 1: 'self'}
+	nodeid_list = [1,2,3,4]
+        nodeid_map = {2: '5001', 1: 'self', 3: '50052', 4: '50051'}
+	#nodeid_list = [1,2]
+        #nodeid_map = {2: '5001', 1: 'self'}
        
 
 	node_client = {}
@@ -677,7 +677,7 @@ if __name__ == '__main__':
         images_filepath = '/home/vm1/Desktop/ODM/grpc_stages/node1'  #file path of current node images
         file_path = images_filepath + '/'
         opensfm_config = opensfm_interface.setup_opensfm_config(file_path)
-        active_number_of_nodes = 2
+        active_number_of_nodes = 4
         photos_name = collections.defaultdict(lambda : "None")
         photo_list =  os.listdir(os.path.join(images_filepath, 'images'))
         #print(photo_list)
@@ -719,6 +719,7 @@ if __name__ == '__main__':
 
         start = timer()
 
+	
         for eachnode in nodeid_list:
             if (photos_rem > 0):
                 new_photos_for_node = photos_per_node + photos_rem
@@ -761,6 +762,7 @@ if __name__ == '__main__':
                 #send regular number of photos
 
         job_queue.join()
+	
         
 
         end = timer()
@@ -777,6 +779,7 @@ if __name__ == '__main__':
         
 
         start = timer()
+	
 
         for each in nodeid_list:
             print('extract exif node')
@@ -792,6 +795,7 @@ if __name__ == '__main__':
 
         #call join to wait
         job_queue.join()
+	
 
         end = timer()
         exif_extraction_time = end - start
@@ -814,7 +818,7 @@ if __name__ == '__main__':
 		
 
 
-	
+
         for each in nodeid_list:
             if each == nodeid:
                 job_task_detect = {'title': 'detect_features',  'nodeid': nodeid, 'clientid': each, 'imagelist': node_imagelist[each][0], 'node_file_path': images_filepath, 'opensfm_config': opensfm_config}
@@ -824,6 +828,7 @@ if __name__ == '__main__':
 
       
         job_queue.join()
+	
 	
 
         end = timer()
